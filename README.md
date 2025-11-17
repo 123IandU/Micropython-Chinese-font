@@ -8,4 +8,4 @@
 
 因为micropython仅支持utf-8，不支持gb2312编码，所以制作了这款字体
 
-！[实例](image.png)
+![实例](image.png)
