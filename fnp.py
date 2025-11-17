@@ -35,12 +35,10 @@ FONT12_PATH = "font12_uni.bin"
 
 _font12_file = None
 
-# 模块初始化（仅一次）
 def _init_font_files():
     global _font12_file
     try:
         _font12_file = open(FONT12_PATH, "rb")
-        print("12号字体文件打开成功")
     except OSError:
         print(f"警告：未找到{FONT12_PATH}")
     gc.collect()
@@ -58,8 +56,6 @@ def read_glyph(unicode_code):
     except OSError:
         return None
 
-# ---------------------- 私有接口 ----------------------
-
 def _draw_char12(lcd, unicode_code, x, y):
     
     glyph_data = read_glyph(unicode_code)
@@ -68,13 +64,12 @@ def _draw_char12(lcd, unicode_code, x, y):
     for row in range(12):
         byte1 = glyph_data[row]
         byte2 = glyph_data[row + 12]
-        # 位运算直接操作，无临时变量
         for col in range(8):
             if ((byte1 >> (7 - col)) & 1) and 0 <= (x + col) <= 128 and 0 <= (y + row) <= 128: lcd.pixel(x + col, y + row, 1)
         for col in range(4):
             if ((byte2 >> (7 - col)) & 1) and 0 <= (x + col) <= 128 and 0 <= (y + row) <= 128: lcd.pixel(x + 8 + col, y + row, 1)
-    glyph_data = None  # 强制释放
-    gc.collect()  # 绘制完单个字符立即回收
+    glyph_data = None
+    gc.collect()
     
 def _draw_punc(lcd, unicode_code, x, y):
     
@@ -83,13 +78,11 @@ def _draw_punc(lcd, unicode_code, x, y):
         return
     for row in range(12):
         byte1 = glyph_data[row]
-        # 位运算直接操作，无临时变量
         for col in range(8):
             if ((byte1 >> (7 - col)) & 1) and 0 <= (x + col) <= 128 and 0 <= (y + row) <= 128: lcd.pixel(x + col, y + row, 1)
-    glyph_data = None  # 强制释放
-    gc.collect()  # 绘制完单个字符立即回收
+    glyph_data = None 
+    gc.collect()
 
-# ---------------------- 公开接口 ----------------------    
 def show_ch(lcd, ch_str, x, y):
     ch_list = [ord(char) for char in ch_str]
     current_x = x
@@ -109,8 +102,8 @@ def show_ch(lcd, ch_str, x, y):
         if current_x + 12 > lcd.width:
             current_x = x
             y += 12
-    ch_list = None  # 强制释放
-    gc.collect()  # 绘制完单个字符立即回收
+    ch_list = None
+    gc.collect()
 
 def close_font_files():
     global _font12_file
@@ -118,23 +111,3 @@ def close_font_files():
         _font12_file.close()
         _font12_file = None
     gc.collect()
-    
-class MessageQueue:
-    def __init__(self, max_size=10):
-        self.queue = []  # 存储消息的列表
-        self.max_size = max_size  # 最大队列长度（避免内存溢出）
-    
-    def enqueue(self, msg):
-        """加入消息到队列，若满则移除最旧的消息"""
-        if len(self.queue) >= self.max_size:
-            self.queue.pop(0)  # 移除最旧的消息
-        self.queue.append(msg)  # 加入新消息
-    
-    def dequeue(self):
-        """从队列取出最旧的消息，若无则返回None"""
-        if len(self.queue) > 0:
-            return self.queue.pop(0)
-        return None
-    
-    def is_empty(self):
-        return len(self.queue) == 0
